@@ -1,0 +1,14 @@
+[project]
+name = "comfyui-modelbrowser"
+description = "Adds a browse button to every model dropdown so you can load models from anywhere on disk, session-only."
+version = "1.0.0"
+license = { file = "LICENSE" }
+dependencies = []
+
+[project.urls]
+Repository = "https://github.com/fuskio64/ComfyUI-ModelBrowser"
+
+[tool.comfy]
+PublisherId = ""
+DisplayName = "Model Browser"
+Icon = ""
