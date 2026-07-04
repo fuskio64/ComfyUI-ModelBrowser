@@ -1,5 +1,8 @@
 # ComfyUI-ModelBrowser
 
+> *The tyranny of order and good customs is over. People who can't organize
+> can use Comfy from now on.*
+
 Adds a **📂 browse** button under every model dropdown in ComfyUI (checkpoints,
 LoRAs, VAEs, CLIP/text encoders, diffusion models, ControlNets, upscalers… in
 core *and* custom nodes) so you can pick a model file from **anywhere on disk**
@@ -16,17 +19,44 @@ instead of only the configured models folders.
 
 ## Install
 
-**ComfyUI Manager:** *Install via Git URL* →
-`https://github.com/fuskio64/ComfyUI-ModelBrowser`
+Works with any ComfyUI installation (standalone, portable, StabilityMatrix,
+Pinokio…) — it's a normal custom node, so it just goes in the `custom_nodes`
+folder. Pick whichever method fits you:
 
-**Manual:**
+### Option A — ComfyUI Manager (easiest)
+
+1. In the ComfyUI web page, open **Manager** → **Custom Nodes Manager** →
+   **Install via Git URL**.
+2. Paste: `https://github.com/fuskio64/ComfyUI-ModelBrowser`
+3. Restart ComfyUI when prompted.
+
+### Option B — git clone
+
+Open a terminal in your ComfyUI folder (the one that contains `custom_nodes`)
+and run:
 
 ```
-cd ComfyUI/custom_nodes
+cd custom_nodes
 git clone https://github.com/fuskio64/ComfyUI-ModelBrowser
 ```
 
-Restart ComfyUI and reload the browser page.
+Where `custom_nodes` lives depends on your install, for example:
+
+- **Standalone / manual install:** `ComfyUI/custom_nodes`
+- **Windows portable build:** `ComfyUI_windows_portable/ComfyUI/custom_nodes`
+- **StabilityMatrix:** `StabilityMatrix/Data/Packages/ComfyUI/custom_nodes`
+
+### Option C — no git, no Manager (download ZIP)
+
+1. On the GitHub page, click **Code** → **Download ZIP**.
+2. Extract it into your `custom_nodes` folder and make sure the folder is
+   named `ComfyUI-ModelBrowser` (GitHub names the extracted folder
+   `ComfyUI-ModelBrowser-main` — rename it).
+
+### After installing (all methods)
+
+Restart ComfyUI, then **hard-refresh the browser page** (Ctrl+F5) so the new
+frontend script loads. No extra Python packages are needed.
 
 ## Use
 
