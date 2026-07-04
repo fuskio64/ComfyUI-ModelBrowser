@@ -1,3 +1,5 @@
+<img width="1469" height="1073" alt="imagen" src="https://github.com/user-attachments/assets/d36e8a0d-edca-416c-871f-fd1d775773d9" />
+
 # ComfyUI-ModelBrowser
 
 > *The tyranny of order and good customs is over. People who can't organize
