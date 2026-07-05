@@ -20,6 +20,12 @@ const NAME_HINTS = {
     style_model_name: "style_models",
     gligen_name: "gligen",
     photomaker_model_name: "photomaker",
+    audio_encoder_name: "audio_encoders",
+};
+
+// Per-node fallbacks for widget names too generic to trust globally.
+const NODE_HINTS = {
+    ModelPatchLoader: { name: "model_patches" },
 };
 
 /* ------------------------------------------------------------------ */
@@ -72,6 +78,8 @@ function widgetValues(node, widget) {
 function matchFolder(node, widget, folders) {
     const values = widgetValues(node, widget) || [];
     const meaningful = values.filter((x) => typeof x === "string" && !EXTRA_VALUES.has(x));
+    const hint =
+        NODE_HINTS[node.comfyClass ?? node.type]?.[widget.name] ?? NAME_HINTS[widget.name];
 
     if (meaningful.length) {
         let candidates = Object.entries(folders).filter(([, files]) =>
@@ -79,7 +87,6 @@ function matchFolder(node, widget, folders) {
         );
         if (!candidates.length) return null;
         if (candidates.length > 1) {
-            const hint = NAME_HINTS[widget.name];
             const hinted = candidates.find(([n]) => n === hint);
             if (hinted) return hinted[0];
             candidates.sort(
@@ -91,7 +98,6 @@ function matchFolder(node, widget, folders) {
     }
 
     // Empty combo: fall back to well-known input names.
-    const hint = NAME_HINTS[widget.name];
     return hint && folders[hint] ? hint : null;
 }
 
