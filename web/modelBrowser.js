@@ -21,11 +21,23 @@ const NAME_HINTS = {
     gligen_name: "gligen",
     photomaker_model_name: "photomaker",
     audio_encoder_name: "audio_encoders",
+    hypernetwork_name: "hypernetworks",
+    bg_removal_name: "background_removal",
+    config_name: "configs",
 };
 
 // Per-node fallbacks for widget names too generic to trust globally.
 const NODE_HINTS = {
     ModelPatchLoader: { name: "model_patches" },
+    UpscaleModelLoader: { model_name: "upscale_models" },
+    LatentUpscaleModelLoader: { model_name: "latent_upscale_models" },
+    FrameInterpolationModelLoader: { model_name: "frame_interpolation" },
+    LoadMediaPipeFaceLandmarker: { model_name: "detection" },
+    LoadMoGeModel: { model_name: "geometry_estimation" },
+    LoadDA3Model: { model_name: "geometry_estimation" },
+    OpticalFlowLoader: { model_name: "optical_flow" },
+    // clip_name globally hints text_encoders; this node loads clip_vision.
+    CLIPVisionLoader: { clip_name: "clip_vision" },
 };
 
 /* ------------------------------------------------------------------ */
