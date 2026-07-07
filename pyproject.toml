@@ -9,6 +9,6 @@ dependencies = []
 Repository = "https://github.com/fuskio64/ComfyUI-ModelBrowser"
 
 [tool.comfy]
-PublisherId = ""
+PublisherId = "reave"
 DisplayName = "Model Browser"
 Icon = ""
