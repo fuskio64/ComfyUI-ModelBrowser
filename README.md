@@ -90,4 +90,4 @@ monkey-patching of ComfyUI internals.
 
 ## License
 
-MIT
+GPL-3.0 — free to use, modify, and share; modified versions you distribute must stay open source under the same terms.
