@@ -4,8 +4,10 @@ GET  /modelbrowser/browse  - list a directory on the server (dirs + model files)
 POST /modelbrowser/pick    - register a picked model file for this session
 """
 
+import json
 import os
 import string
+from pathlib import Path
 
 from aiohttp import web
 
@@ -16,6 +18,9 @@ routes = PromptServer.instance.routes
 
 # Directory names that are pointless to descend into from the picker.
 _SKIP_DIRS = {"$recycle.bin", "system volume information"}
+
+# Extra model paths added via the browser are persisted here so they survive restarts.
+_EXTRA_PATHS_FILE = Path(__file__).parent / "extra_paths.json"
 
 
 def _norm(path: str) -> str:
@@ -39,6 +44,41 @@ def _roots_response():
         ]
         return web.json_response({"path": "", "parent": None, "dirs": drives, "files": []})
     return None  # posix: caller falls through to listing "/"
+
+
+def _persist_extra_path(folder_name: str, path: str) -> None:
+    """Append path to extra_paths.json if not already present. Failures are non-fatal."""
+    try:
+        data: dict = {}
+        if _EXTRA_PATHS_FILE.exists():
+            with _EXTRA_PATHS_FILE.open("r", encoding="utf-8") as f:
+                data = json.load(f)
+        paths = data.setdefault(folder_name, [])
+        norm = _norm(path)
+        if not any(_norm(p) == norm for p in paths):
+            paths.append(path)
+            with _EXTRA_PATHS_FILE.open("w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+    except Exception:
+        pass
+
+
+def load_extra_paths() -> None:
+    """Re-register persisted extra model paths. Called once at startup from __init__.py."""
+    if not _EXTRA_PATHS_FILE.exists():
+        return
+    try:
+        with _EXTRA_PATHS_FILE.open("r", encoding="utf-8") as f:
+            data = json.load(f)
+        for folder_name, paths in data.items():
+            for path in paths:
+                if not os.path.isdir(path):
+                    continue
+                registered = {_norm(p) for p in folder_paths.get_folder_paths(folder_name)}
+                if _norm(path) not in registered:
+                    folder_paths.add_model_folder_path(folder_name, path)
+    except Exception:
+        pass
 
 
 @routes.get("/modelbrowser/browse")
@@ -110,8 +150,8 @@ async def modelbrowser_pick(request):
     parent = os.path.dirname(file_path)
     registered = {_norm(p) for p in folder_paths.get_folder_paths(folder_name)}
     if _norm(parent) not in registered:
-        # Session-only: extra search paths are never persisted by ComfyUI.
         folder_paths.add_model_folder_path(folder_name, parent)
+        _persist_extra_path(folder_name, parent)
         try:
             folder_paths.filename_list_cache.pop(folder_name, None)
         except AttributeError:
