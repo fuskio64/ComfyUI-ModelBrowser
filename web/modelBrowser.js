@@ -24,6 +24,17 @@ const NAME_HINTS = {
     hypernetwork_name: "hypernetworks",
     bg_removal_name: "background_removal",
     config_name: "configs",
+    // IP-Adapter
+    ipadapter: "ipadapter",
+    ip_adapter: "ipadapter",
+    // InstantID
+    instantid_file: "instantid",
+    // FaceRestore / CodeFormer
+    facerestore_model: "facerestore_models",
+    // PuLID
+    pulid_file: "pulid",
+    // Embeddings
+    embedding_name: "embeddings",
 };
 
 // Per-node fallbacks for widget names too generic to trust globally.
@@ -38,6 +49,31 @@ const NODE_HINTS = {
     OpticalFlowLoader: { model_name: "optical_flow" },
     // clip_name globally hints text_encoders; this node loads clip_vision.
     CLIPVisionLoader: { clip_name: "clip_vision" },
+    // AnimateDiff
+    ADE_LoadAnimateDiffModel: { model_name: "animatediff_models" },
+    ADE_LoadMotionLoRAAsOptional: { model_name: "animatediff_motion_lora" },
+    ADE_LoadAnimateDiffModelSimple: { model_name: "animatediff_models" },
+    // IC-Light
+    ICLightModelLoader: { model_name: "ic_light" },
+    // SUPIR
+    SUPIR_model_loader: { model_name: "checkpoints" },
+    // LayerDiffuse
+    LayeredDiffusionApply: { config: "configs" },
+};
+
+// Text widgets (single-line string inputs) whose names suggest a file path.
+// Value is the folder hint passed to the browser (empty string = all model files).
+const PATH_WIDGET_HINTS = {
+    model_path: "",
+    checkpoint_path: "checkpoints",
+    ckpt_path: "checkpoints",
+    lora_path: "loras",
+    vae_path: "vae",
+    unet_path: "diffusion_models",
+    controlnet_path: "controlnet",
+    embedding_path: "embeddings",
+    upscale_model_path: "upscale_models",
+    clip_path: "text_encoders",
 };
 
 /* ------------------------------------------------------------------ */
@@ -48,6 +84,7 @@ const TRANSLATIONS = {
     en: {
         dialogTitle: (f) =>
             `Select a <span style="color:var(--p-primary-color,#7aa2f7)">${f}</span> model`,
+        dialogTitleGeneric: "Select a model file",
         parentFolder: "Parent folder",
         pathPlaceholder: "Type a path and press Enter",
         filterPlaceholder: "🔍 filter",
@@ -68,6 +105,7 @@ const TRANSLATIONS = {
     es: {
         dialogTitle: (f) =>
             `Selecciona un modelo <span style="color:var(--p-primary-color,#7aa2f7)">${f}</span>`,
+        dialogTitleGeneric: "Selecciona un archivo de modelo",
         parentFolder: "Carpeta superior",
         pathPlaceholder: "Escribe una ruta y pulsa Enter",
         filterPlaceholder: "🔍 filtrar",
@@ -88,6 +126,7 @@ const TRANSLATIONS = {
     zh: {
         dialogTitle: (f) =>
             `选择 <span style="color:var(--p-primary-color,#7aa2f7)">${f}</span> 模型`,
+        dialogTitleGeneric: "选择模型文件",
         parentFolder: "上级目录",
         pathPlaceholder: "输入路径并按 Enter",
         filterPlaceholder: "🔍 筛选",
@@ -107,6 +146,7 @@ const TRANSLATIONS = {
     ja: {
         dialogTitle: (f) =>
             `<span style="color:var(--p-primary-color,#7aa2f7)">${f}</span> モデルを選択`,
+        dialogTitleGeneric: "モデルファイルを選択",
         parentFolder: "上のフォルダ",
         pathPlaceholder: "パスを入力して Enter を押してください",
         filterPlaceholder: "🔍 フィルター",
@@ -202,6 +242,13 @@ function matchFolder(node, widget, folders) {
     return hint && folders[hint] ? hint : null;
 }
 
+// Resolves the folder hint for a text (path) widget, or null if not applicable.
+function matchPathFolder(node, widget) {
+    if (widget.name in PATH_WIDGET_HINTS) return PATH_WIDGET_HINTS[widget.name];
+    if (widget.name.endsWith("_path") || widget.name.endsWith("_filepath")) return "";
+    return null;
+}
+
 /* ------------------------------------------------------------------ */
 /* UI helpers                                                          */
 /* ------------------------------------------------------------------ */
@@ -229,6 +276,7 @@ function formatSize(bytes) {
 /* File picker dialog                                                  */
 /* ------------------------------------------------------------------ */
 
+// folderName: model folder to filter by (e.g. "checkpoints"), or "" for all model files.
 function openBrowserDialog(folderName, onPick) {
     const lastKey = `ModelBrowser.lastPath.${folderName}`;
 
@@ -245,10 +293,12 @@ function openBrowserDialog(folderName, onPick) {
         "box-shadow:0 8px 30px rgba(0,0,0,0.6);font-family:sans-serif;font-size:14px;";
     overlay.appendChild(panel);
 
+    const titleHtml = folderName ? T.dialogTitle(folderName) : T.dialogTitleGeneric;
+
     panel.innerHTML = `
         <div data-mb="header" style="padding:10px 14px;font-weight:bold;cursor:move;user-select:none;
                                      border-bottom:1px solid var(--border-color,#4e4e4e);">
-            ${T.dialogTitle(folderName)}
+            ${titleHtml}
         </div>
         <div style="display:flex;gap:6px;padding:8px 14px;">
             <button data-mb="up" title="${T.parentFolder}" style="min-width:34px;">⬆</button>
@@ -427,6 +477,7 @@ function openBrowserDialog(folderName, onPick) {
 /* Picking a file                                                      */
 /* ------------------------------------------------------------------ */
 
+// Used for combo widgets: registers the file with ComfyUI and sets the widget to the filename.
 async function applyPick(node, widget, folderName, filePath) {
     let data;
     try {
@@ -460,6 +511,16 @@ async function applyPick(node, widget, folderName, filePath) {
     }
 }
 
+// Used for text (path) widgets: sets the full file path directly as the widget value.
+function applyPathPick(node, widget, filePath) {
+    widget.value = filePath;
+    try {
+        widget.callback?.(filePath, app.canvas, node);
+    } catch {}
+    node.graph?.setDirtyCanvas(true, true);
+    toast("success", T.setHeader(widget.name), filePath);
+}
+
 /* ------------------------------------------------------------------ */
 /* Button injection                                                    */
 /* ------------------------------------------------------------------ */
@@ -471,16 +532,33 @@ async function addBrowseButtons(node) {
 
     let added = false;
     for (const widget of [...node.widgets]) {
-        if (widget.type !== "combo" || widget.__mbButton) continue;
-        const folderName = matchFolder(node, widget, folders);
-        if (!folderName) continue;
+        if (widget.__mbButton) continue;
+
+        let folderName, pathMode;
+
+        if (widget.type === "combo") {
+            folderName = matchFolder(node, widget, folders);
+            if (!folderName) continue;
+            pathMode = false;
+        } else if (widget.type === "text") {
+            folderName = matchPathFolder(node, widget);
+            if (folderName === null) continue;
+            pathMode = true;
+        } else {
+            continue;
+        }
+
         widget.__mbButton = true;
 
         // Buttons are appended at the END of the widget list on purpose:
         // stale trailing entries in widgets_values are ignored by litegraph,
         // so workflows saved with this extension still load cleanly without it.
         const btn = node.addWidget("button", T.browseBtn(widget.name), null, () => {
-            openBrowserDialog(folderName, (filePath) => applyPick(node, widget, folderName, filePath));
+            if (pathMode) {
+                openBrowserDialog(folderName, (filePath) => applyPathPick(node, widget, filePath));
+            } else {
+                openBrowserDialog(folderName, (filePath) => applyPick(node, widget, folderName, filePath));
+            }
         });
         btn.serialize = false;
         btn.options = Object.assign(btn.options || {}, { serialize: false });
