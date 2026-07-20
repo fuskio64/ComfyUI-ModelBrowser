@@ -222,23 +222,29 @@ function matchFolder(node, widget, folders) {
     const hint =
         NODE_HINTS[node.comfyClass ?? node.type]?.[widget.name] ?? NAME_HINTS[widget.name];
 
-    if (meaningful.length) {
+    // Some nodes pad their list with synthetic entries that aren't files
+    // (e.g. VAELoader adds "taesd"/"taesdxl"/"taesd3"/"taef1"/"pixel_space").
+    // Only values that actually exist in some model folder can identify one.
+    const known = meaningful.filter((m) => {
+        for (const files of Object.values(folders)) if (files.has(m)) return true;
+        return false;
+    });
+
+    if (known.length) {
         let candidates = Object.entries(folders).filter(([, files]) =>
-            meaningful.every((m) => files.has(m))
+            known.every((m) => files.has(m))
         );
-        if (!candidates.length) return null;
         if (candidates.length > 1) {
             const hinted = candidates.find(([n]) => n === hint);
             if (hinted) return hinted[0];
             candidates.sort(
-                (a, b) =>
-                    Math.abs(a[1].size - meaningful.length) - Math.abs(b[1].size - meaningful.length)
+                (a, b) => Math.abs(a[1].size - known.length) - Math.abs(b[1].size - known.length)
             );
         }
-        return candidates[0][0];
+        if (candidates.length) return candidates[0][0];
     }
 
-    // Empty combo: fall back to well-known input names.
+    // Nothing matchable in the combo: fall back to well-known input names.
     return hint && folders[hint] ? hint : null;
 }
 
