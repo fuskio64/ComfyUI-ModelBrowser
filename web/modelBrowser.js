@@ -41,6 +41,95 @@ const NODE_HINTS = {
 };
 
 /* ------------------------------------------------------------------ */
+/* i18n                                                                */
+/* ------------------------------------------------------------------ */
+
+const TRANSLATIONS = {
+    en: {
+        dialogTitle: (f) =>
+            `Select a <span style="color:var(--p-primary-color,#7aa2f7)">${f}</span> model`,
+        parentFolder: "Parent folder",
+        pathPlaceholder: "Type a path and press Enter",
+        filterPlaceholder: "🔍 filter",
+        cancel: "Cancel",
+        select: "Select",
+        browseBtn: (n) => `📂 browse ${n}`,
+        loading: "Loading…",
+        statusFiltered: (dirs, shown, total) =>
+            `${dirs} folders, ${shown} of ${total} model files match`,
+        statusAll: (dirs, total) => `${dirs} folders, ${total} model files`,
+        toastHeader: "Model Browser",
+        collisionHeader: "Name collision",
+        collision: (name, folder) =>
+            `Another "${name}" already exists in your ${folder} folder and takes priority. ` +
+            `Rename the file you browsed to and pick it again.`,
+        setHeader: (n) => `${n} set`,
+    },
+    es: {
+        dialogTitle: (f) =>
+            `Selecciona un modelo <span style="color:var(--p-primary-color,#7aa2f7)">${f}</span>`,
+        parentFolder: "Carpeta superior",
+        pathPlaceholder: "Escribe una ruta y pulsa Enter",
+        filterPlaceholder: "🔍 filtrar",
+        cancel: "Cancelar",
+        select: "Seleccionar",
+        browseBtn: (n) => `📂 explorar ${n}`,
+        loading: "Cargando…",
+        statusFiltered: (dirs, shown, total) =>
+            `${dirs} carpetas, ${shown} de ${total} modelos coinciden`,
+        statusAll: (dirs, total) => `${dirs} carpetas, ${total} modelos`,
+        toastHeader: "Model Browser",
+        collisionHeader: "Colisión de nombres",
+        collision: (name, folder) =>
+            `Ya existe otro "${name}" en tu carpeta ${folder} y tiene prioridad. ` +
+            `Renombra el archivo y vuelve a seleccionarlo.`,
+        setHeader: (n) => `${n} establecido`,
+    },
+    zh: {
+        dialogTitle: (f) =>
+            `选择 <span style="color:var(--p-primary-color,#7aa2f7)">${f}</span> 模型`,
+        parentFolder: "上级目录",
+        pathPlaceholder: "输入路径并按 Enter",
+        filterPlaceholder: "🔍 筛选",
+        cancel: "取消",
+        select: "选择",
+        browseBtn: (n) => `📂 浏览 ${n}`,
+        loading: "加载中…",
+        statusFiltered: (dirs, shown, total) =>
+            `${dirs} 个文件夹，${shown}/${total} 个模型文件匹配`,
+        statusAll: (dirs, total) => `${dirs} 个文件夹，${total} 个模型文件`,
+        toastHeader: "模型浏览器",
+        collisionHeader: "文件名冲突",
+        collision: (name, folder) =>
+            `"${name}" 已存在于 ${folder} 文件夹中并具有优先级。请重命名文件后重新选择。`,
+        setHeader: (n) => `已设置 ${n}`,
+    },
+    ja: {
+        dialogTitle: (f) =>
+            `<span style="color:var(--p-primary-color,#7aa2f7)">${f}</span> モデルを選択`,
+        parentFolder: "上のフォルダ",
+        pathPlaceholder: "パスを入力して Enter を押してください",
+        filterPlaceholder: "🔍 フィルター",
+        cancel: "キャンセル",
+        select: "選択",
+        browseBtn: (n) => `📂 参照 ${n}`,
+        loading: "読み込み中…",
+        statusFiltered: (dirs, shown, total) =>
+            `${dirs} フォルダ、${total} 件中 ${shown} 件のモデルが一致`,
+        statusAll: (dirs, total) => `${dirs} フォルダ、${total} 件のモデル`,
+        toastHeader: "モデルブラウザ",
+        collisionHeader: "名前の競合",
+        collision: (name, folder) =>
+            `"${name}" はすでに ${folder} フォルダに存在し、優先されます。` +
+            `ファイルを別名に変更して再度選択してください。`,
+        setHeader: (n) => `${n} が設定されました`,
+    },
+};
+
+const _lang = navigator.language?.slice(0, 2).toLowerCase();
+const T = TRANSLATIONS[_lang] ?? TRANSLATIONS.en;
+
+/* ------------------------------------------------------------------ */
 /* Model folder index                                                  */
 /* ------------------------------------------------------------------ */
 
@@ -159,14 +248,14 @@ function openBrowserDialog(folderName, onPick) {
     panel.innerHTML = `
         <div data-mb="header" style="padding:10px 14px;font-weight:bold;cursor:move;user-select:none;
                                      border-bottom:1px solid var(--border-color,#4e4e4e);">
-            Select a <span style="color:var(--p-primary-color,#7aa2f7)">${folderName}</span> model
+            ${T.dialogTitle(folderName)}
         </div>
         <div style="display:flex;gap:6px;padding:8px 14px;">
-            <button data-mb="up" title="Parent folder" style="min-width:34px;">⬆</button>
-            <input data-mb="path" type="text" spellcheck="false" placeholder="Type a path and press Enter"
+            <button data-mb="up" title="${T.parentFolder}" style="min-width:34px;">⬆</button>
+            <input data-mb="path" type="text" spellcheck="false" placeholder="${T.pathPlaceholder}"
                    style="flex:1;background:var(--comfy-input-bg,#151515);color:inherit;
                           border:1px solid var(--border-color,#4e4e4e);border-radius:4px;padding:4px 8px;"/>
-            <input data-mb="filter" type="text" spellcheck="false" placeholder="🔍 filter"
+            <input data-mb="filter" type="text" spellcheck="false" placeholder="${T.filterPlaceholder}"
                    style="width:140px;background:var(--comfy-input-bg,#151515);color:inherit;
                           border:1px solid var(--border-color,#4e4e4e);border-radius:4px;padding:4px 8px;"/>
         </div>
@@ -174,8 +263,8 @@ function openBrowserDialog(folderName, onPick) {
                                    border-radius:4px;background:var(--comfy-input-bg,#151515);"></div>
         <div data-mb="status" style="padding:4px 14px;min-height:20px;font-size:12px;opacity:0.75;"></div>
         <div style="display:flex;justify-content:flex-end;gap:8px;padding:0 14px 12px;">
-            <button data-mb="cancel">Cancel</button>
-            <button data-mb="select" disabled>Select</button>
+            <button data-mb="cancel">${T.cancel}</button>
+            <button data-mb="select" disabled>${T.select}</button>
         </div>`;
 
     for (const b of panel.querySelectorAll("button")) {
@@ -291,12 +380,12 @@ function openBrowserDialog(folderName, onPick) {
             els.select.disabled = true;
         }
         els.status.textContent = q
-            ? `${lastData.dirs.length} folders, ${shown} of ${lastData.files.length} model files match`
-            : `${lastData.dirs.length} folders, ${lastData.files.length} model files`;
+            ? T.statusFiltered(lastData.dirs.length, shown, lastData.files.length)
+            : T.statusAll(lastData.dirs.length, lastData.files.length);
     }
 
     async function load(path) {
-        els.status.textContent = "Loading…";
+        els.status.textContent = T.loading;
         selectedPath = null;
         els.select.disabled = true;
         try {
@@ -348,11 +437,11 @@ async function applyPick(node, widget, folderName, filePath) {
         });
         data = await res.json();
         if (!res.ok) {
-            toast("error", "Model Browser", data.error || res.statusText);
+            toast("error", T.toastHeader, data.error || res.statusText);
             return;
         }
     } catch (e) {
-        toast("error", "Model Browser", String(e));
+        toast("error", T.toastHeader, String(e));
         return;
     }
 
@@ -365,14 +454,9 @@ async function applyPick(node, widget, folderName, filePath) {
     node.graph?.setDirtyCanvas(true, true);
 
     if (data.collision) {
-        toast(
-            "warn",
-            "Name collision",
-            `Another "${data.name}" already exists in your ${folderName} folder and takes priority. ` +
-                `Rename the file you browsed to and pick it again.`
-        );
+        toast("warn", T.collisionHeader, T.collision(data.name, folderName));
     } else {
-        toast("success", `${widget.name} set`, data.name);
+        toast("success", T.setHeader(widget.name), data.name);
     }
 }
 
@@ -395,7 +479,7 @@ async function addBrowseButtons(node) {
         // Buttons are appended at the END of the widget list on purpose:
         // stale trailing entries in widgets_values are ignored by litegraph,
         // so workflows saved with this extension still load cleanly without it.
-        const btn = node.addWidget("button", `📂 browse ${widget.name}`, null, () => {
+        const btn = node.addWidget("button", T.browseBtn(widget.name), null, () => {
             openBrowserDialog(folderName, (filePath) => applyPick(node, widget, folderName, filePath));
         });
         btn.serialize = false;
