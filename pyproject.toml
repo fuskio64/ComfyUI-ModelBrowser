@@ -1,7 +1,7 @@
 [project]
 name = "comfyui-modelbrowser"
-description = "Adds a browse button to every model dropdown so you can load models from anywhere on disk, session-only."
-version = "1.2.1"
+description = "Adds a browse button to every model dropdown so you can load models from anywhere on disk. Extra paths persist across restarts. Supports English, Spanish, Chinese and Japanese."
+version = "1.3.0"
 license = { file = "LICENSE" }
 dependencies = []
 
